@@ -145,7 +145,8 @@ export default {
 
         // Adds the opencollective payment method to enable the host to allocate funds to collectives
         // Note that it's not expected anymore to connect Stripe if you're not an host
-        await collective.becomeHost();
+        // For that reason, we stop doing it
+        // await collective.becomeHost();
 
         await collective.setCurrency(account.default_currency.toUpperCase());
 

@@ -916,10 +916,6 @@ export default function (Sequelize, DataTypes) {
   // run when attaching a Stripe Account to this user/organization collective
   // this Payment Method will be used for "Add Funds"
   Collective.prototype.becomeHost = async function () {
-    if (this.type !== 'USER' && this.type !== 'ORGANIZATION') {
-      return;
-    }
-
     if (!this.isHostAccount) {
       const updatedValues = { isHostAccount: true };
       // hostFeePercent and platformFeePercent are not supposed to be set at this point
@@ -933,15 +929,17 @@ export default function (Sequelize, DataTypes) {
       await this.update(updatedValues);
     }
 
-    await this.getOrCreateHostPaymentMethod();
+    if (this.type === 'ORGANIZATION') {
+      await this.getOrCreateHostPaymentMethod();
 
-    await models.Activity.create({
-      type: activities.ACTIVATED_COLLECTIVE_AS_HOST,
-      CollectiveId: this.id,
-      data: { collective: this.info },
-    });
+      await this.activateBudget();
 
-    await this.activateBudget();
+      await models.Activity.create({
+        type: activities.ACTIVATED_COLLECTIVE_AS_HOST,
+        CollectiveId: this.id,
+        data: { collective: this.info },
+      });
+    }
 
     return this;
   };
@@ -1978,10 +1976,6 @@ export default function (Sequelize, DataTypes) {
    * @param {*} creatorUser { id }
    */
   Collective.prototype.changeHost = async function (newHostCollectiveId, creatorUser) {
-    if (newHostCollectiveId === this.id) {
-      // do nothing
-      return;
-    }
     const balance = await this.getBalance();
     if (balance > 0) {
       throw new Error(`Unable to change host: you still have a balance of ${formatCurrency(balance, this.currency)}`);
@@ -1994,7 +1988,12 @@ export default function (Sequelize, DataTypes) {
       },
     });
     if (membership) {
-      membership.destroy();
+      await membership.destroy();
+    }
+
+    // Self Hosted Collective
+    if (this.id === this.HostCollectiveId) {
+      this.isHostAccount = false;
     }
 
     // Prepare collective to receive a new host
