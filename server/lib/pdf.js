@@ -9,7 +9,7 @@ import { fetchWithTimeout } from './fetch';
 import logger from './logger';
 
 export const getTransactionPdf = async (transaction, user) => {
-  if (config.pdfService.fetchTransactionsReceipts === false) {
+  if (Boolean(config.pdfService.fetchTransactionsReceipts) === false) {
     return;
   }
   const pdfUrl = `${config.host.pdf}/transactions/${transaction.uuid}/invoice.pdf`;
