@@ -118,6 +118,7 @@ export const SPAMMERS_DOMAINS = [
   'dridainfotech.com',
   'edu-24.info',
   'faqssupplement.com',
+  'feedsfloor.com',
   'fitcareketo.com',
   'fitdiettrends.com',
   'fitnesscarezone.com',
